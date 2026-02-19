@@ -1,0 +1,93 @@
+index.html
+w file
+
+index.html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CarEye</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            background: #111;
+            color: white;
+            padding: 30px;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            background: red;
+            color: white;
+            cursor: pointer;
+        }
+        #log {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🚗 CarEye</h1>
+<p>Voice Driver Report System</p>
+<button onclick="activate()">Activate CarEye</button>
+
+<div id="log"></div>
+
+<script>
+let recognition;
+let synth = window.speechSynthesis;
+
+function speak(text) {
+    let utter = new SpeechSynthesisUtterance(text);
+    synth.speak(utter);
+}
+
+function activate() {
+    speak("Yes? What bad driver is it today?");
+    startListening();
+}
+
+function startListening() {
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "en-US";
+    recognition.start();
+
+    recognition.onresult = function(event) {
+        let text = event.results[0][0].transcript;
+        document.getElementById("log").innerHTML = "You said: " + text;
+
+        let parts = text.split(",");
+        if (parts.length >= 2) {
+            let plate = parts[0].trim().toUpperCase();
+            let offense = parts[1].trim();
+
+            let reports = JSON.parse(localStorage.getItem("reports") || "{}");
+
+            if (!reports[plate]) {
+                reports[plate] = [];
+            }
+
+            reports[plate].push(offense);
+            localStorage.setItem("reports", JSON.stringify(reports));
+
+            let count = reports[plate].length;
+
+            if (count >= 9) {
+                speak("Warning. Plate " + plate + " is marked as High Risk.");
+            } else {
+                speak("Report saved. Plate " + plate + " now has " + count + " reports.");
+            }
+        } else {
+            speak("Please say number plate, then offense.");
+        }
+    };
+}
+</script>
+
+</body>
+</html>
